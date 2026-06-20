@@ -12,12 +12,19 @@ import com.yourname.timelogapp.model.TimeLog
 import com.yourname.timelogapp.storage.TimeLogStorage
 
 @Composable
-fun HomeScreen(onAddClick: () -> Unit) {
+fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit) {
     var logs by remember { mutableStateOf(TimeLogStorage.getLogsForToday()) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("タイムログ") })
+            TopAppBar(
+                title = { Text("タイムログ") },
+                actions = {
+                    TextButton(onClick = onHistoryClick) {
+                        Text("履歴")
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddClick) {
