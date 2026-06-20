@@ -8,11 +8,12 @@ object TimeLogStorage {
     private val logs = mutableListOf<TimeLog>()
     private var nextId = 1L
 
-    fun addLog(dateTime: LocalDateTime, activity: String) {
+    fun addLog(dateTime: LocalDateTime, endDateTime: LocalDateTime?, activity: String) {
         logs.add(
             TimeLog(
                 id = nextId++,
                 dateTime = dateTime,
+                endDateTime = endDateTime,
                 activity = activity
             )
         )

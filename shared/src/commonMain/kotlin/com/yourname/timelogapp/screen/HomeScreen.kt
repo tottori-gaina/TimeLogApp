@@ -68,8 +68,12 @@ fun TimeLogItem(log: TimeLog, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                val startTime = "${log.dateTime.hour.toString().padStart(2, '0')}:${log.dateTime.minute.toString().padStart(2, '0')}"
+                val endTime = log.endDateTime?.let {
+                    "${it.hour.toString().padStart(2, '0')}:${it.minute.toString().padStart(2, '0')}"
+                }
                 Text(
-                    text = "${log.dateTime.hour.toString().padStart(2, '0')}:${log.dateTime.minute.toString().padStart(2, '0')}",
+                    text = if (endTime != null) "$startTime 〜 $endTime" else "$startTime 〜 未終了",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(

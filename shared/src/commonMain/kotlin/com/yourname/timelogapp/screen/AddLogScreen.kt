@@ -17,8 +17,10 @@ import kotlinx.datetime.LocalDateTime
 fun AddLogScreen(onBack: () -> Unit) {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
-    var hour by remember { mutableStateOf(now.hour.toString().padStart(2, '0')) }
-    var minute by remember { mutableStateOf(now.minute.toString().padStart(2, '0')) }
+    var startHour by remember { mutableStateOf(now.hour.toString().padStart(2, '0')) }
+    var startMinute by remember { mutableStateOf(now.minute.toString().padStart(2, '0')) }
+    var endHour by remember { mutableStateOf("") }
+    var endMinute by remember { mutableStateOf("") }
     var activity by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
@@ -34,23 +36,45 @@ fun AddLogScreen(onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 開始時刻
+            Text("開始時刻", style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
-                    value = hour,
-                    onValueChange = { if (it.length <= 2) hour = it },
+                    value = startHour,
+                    onValueChange = { if (it.length <= 2) startHour = it },
                     label = { Text("時") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
-                    value = minute,
-                    onValueChange = { if (it.length <= 2) minute = it },
+                    value = startMinute,
+                    onValueChange = { if (it.length <= 2) startMinute = it },
                     label = { Text("分") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
             }
 
+            // 終了時刻
+            Text("終了時刻（任意）", style = MaterialTheme.typography.labelLarge)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = endHour,
+                    onValueChange = { if (it.length <= 2) endHour = it },
+                    label = { Text("時") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = endMinute,
+                    onValueChange = { if (it.length <= 2) endMinute = it },
+                    label = { Text("分") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // 活動内容
             OutlinedTextField(
                 value = activity,
                 onValueChange = { activity = it },
@@ -65,17 +89,29 @@ fun AddLogScreen(onBack: () -> Unit) {
 
             Button(
                 onClick = {
-                    val h = hour.toIntOrNull()
-                    val m = minute.toIntOrNull()
+                    val sh = startHour.toIntOrNull()
+                    val sm = startMinute.toIntOrNull()
+                    val eh = endHour.toIntOrNull()
+                    val em = endMinute.toIntOrNull()
+
+                    // 終了時刻は両方入力されているか、両方空かのどちらか
+                    val endFilled = endHour.isNotBlank() || endMinute.isNotBlank()
+
                     when {
-                        h == null || h !in 0..23 -> errorMessage = "時は0〜23で入力してください"
-                        m == null || m !in 0..59 -> errorMessage = "分は0〜59で入力してください"
+                        sh == null || sh !in 0..23 -> errorMessage = "開始時（0〜23）を入力してください"
+                        sm == null || sm !in 0..59 -> errorMessage = "開始分（0〜59）を入力してください"
+                        endFilled && (eh == null || eh !in 0..23) -> errorMessage = "終了時（0〜23）を入力してください"
+                        endFilled && (em == null || em !in 0..59) -> errorMessage = "終了分（0〜59）を入力してください"
                         activity.isBlank() -> errorMessage = "活動内容を入力してください"
                         else -> {
-                            val dateTime = LocalDateTime(
-                                now.year, now.monthNumber, now.dayOfMonth, h, m
+                            val startDateTime = LocalDateTime(
+                                now.year, now.month, now.day, sh, sm
                             )
-                            TimeLogStorage.addLog(dateTime, activity)
+                            val endDateTime = if (endFilled && eh != null && em != null) {
+                                LocalDateTime(now.year, now.month, now.day, eh, em)
+                            } else null
+
+                            TimeLogStorage.addLog(startDateTime, endDateTime, activity)
                             onBack()
                         }
                     }
