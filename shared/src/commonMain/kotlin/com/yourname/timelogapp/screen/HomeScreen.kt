@@ -10,15 +10,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yourname.timelogapp.model.TimeLog
 import com.yourname.timelogapp.storage.TimeLogStorage
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit, onEditClick: (TimeLog) -> Unit) {
     var logs by remember { mutableStateOf(TimeLogStorage.getLogsForToday()) }
+    var totalMinutes by remember { mutableStateOf(TimeLogStorage.getTotalMinutesForDate(
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    )) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("タイムログ") },
+                title = {
+                    Column {
+                        Text("タイムログ")
+                        Text(
+                            text = "合計: ${totalMinutes / 60}時間${totalMinutes % 60}分",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                },
                 actions = {
                     TextButton(onClick = onHistoryClick) {
                         Text("履歴")
@@ -51,6 +65,9 @@ fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit, onEditClick: 
                         onDelete = {
                             TimeLogStorage.deleteLog(log.id)
                             logs = TimeLogStorage.getLogsForToday()
+                            totalMinutes = TimeLogStorage.getTotalMinutesForDate(
+                                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                            )
                         },
                         onEdit = { onEditClick(log) }
                     )

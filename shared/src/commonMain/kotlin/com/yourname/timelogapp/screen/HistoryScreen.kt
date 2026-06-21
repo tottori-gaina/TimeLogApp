@@ -58,11 +58,19 @@ fun HistoryScreen(onDateClick: (LocalDate) -> Unit, onBack: () -> Unit) {
                                 text = "${date.year}/${date.month.number.toString().padStart(2, '0')}/${date.day.toString().padStart(2, '0')}",
                                 style = MaterialTheme.typography.titleMedium
                             )
-                            Text(
-                                text = "${logCount}件",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
+                                Text(
+                                    text = "${logCount}件",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                val total = TimeLogStorage.getTotalMinutesForDate(date)
+                                Text(
+                                    text = "${total / 60}時間${total % 60}分",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
                         }
                     }
                 }

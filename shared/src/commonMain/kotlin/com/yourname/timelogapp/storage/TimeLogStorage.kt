@@ -30,6 +30,16 @@ object TimeLogStorage {
         queries.delete(id)
     }
 
+    fun getTotalMinutesForDate(date: LocalDate): Long {
+        return getLogsForDate(date)
+            .filter { it.endDateTime != null }
+            .sumOf { log ->
+                val startMinutes = log.dateTime.hour * 60L + log.dateTime.minute
+                val endMinutes = log.endDateTime!!.hour * 60L + log.endDateTime.minute
+                endMinutes - startMinutes
+            }
+    }
+
     fun updateLog(id: Long, dateTime: LocalDateTime, endDateTime: LocalDateTime?, activity: String) {
         queries.update(
             start_time = dateTime.toString(),
