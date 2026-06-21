@@ -30,6 +30,15 @@ object TimeLogStorage {
         queries.delete(id)
     }
 
+    fun updateLog(id: Long, dateTime: LocalDateTime, endDateTime: LocalDateTime?, activity: String) {
+        queries.update(
+            start_time = dateTime.toString(),
+            end_time = endDateTime?.toString(),
+            activity = activity,
+            id = id
+        )
+    }
+
     fun getAvailableDates(): List<LocalDate> {
         return queries.selectDates().executeAsList().map {
             LocalDate.parse(it)

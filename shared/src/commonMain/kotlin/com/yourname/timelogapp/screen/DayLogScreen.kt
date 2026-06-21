@@ -8,12 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.yourname.timelogapp.model.TimeLog
 import com.yourname.timelogapp.storage.TimeLogStorage
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 
 @Composable
-fun DayLogScreen(date: LocalDate, onBack: () -> Unit) {
+fun DayLogScreen(date: LocalDate, onBack: () -> Unit, onEditClick: (TimeLog) -> Unit) {
     var logs by remember { mutableStateOf(TimeLogStorage.getLogsForDate(date)) }
 
     val dateStr = "${date.year}/${date.month.number.toString().padStart(2, '0')}/${date.day.toString().padStart(2, '0')}"
@@ -49,7 +50,8 @@ fun DayLogScreen(date: LocalDate, onBack: () -> Unit) {
                         onDelete = {
                             TimeLogStorage.deleteLog(log.id)
                             logs = TimeLogStorage.getLogsForDate(date)
-                        }
+                        },
+                        onEdit = { onEditClick(log) }
                     )
                 }
             }

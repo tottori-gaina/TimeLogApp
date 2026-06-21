@@ -12,7 +12,7 @@ import com.yourname.timelogapp.model.TimeLog
 import com.yourname.timelogapp.storage.TimeLogStorage
 
 @Composable
-fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit) {
+fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit, onEditClick: (TimeLog) -> Unit) {
     var logs by remember { mutableStateOf(TimeLogStorage.getLogsForToday()) }
 
     Scaffold(
@@ -51,7 +51,8 @@ fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit) {
                         onDelete = {
                             TimeLogStorage.deleteLog(log.id)
                             logs = TimeLogStorage.getLogsForToday()
-                        }
+                        },
+                        onEdit = { onEditClick(log) }
                     )
                 }
             }
@@ -60,8 +61,11 @@ fun HomeScreen(onAddClick: () -> Unit, onHistoryClick: () -> Unit) {
 }
 
 @Composable
-fun TimeLogItem(log: TimeLog, onDelete: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun TimeLogItem(log: TimeLog, onDelete: () -> Unit, onEdit: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onEdit
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,

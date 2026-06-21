@@ -19,3 +19,6 @@ INSERT INTO TimeLog (id, start_time, end_time, activity) VALUES (NULL, ?, ?, ?);
 
 delete:
 DELETE FROM TimeLog WHERE id = ?;
+
+update:
+UPDATE TimeLog SET start_time = ?, end_time = ?, activity = ? WHERE id = ?;
