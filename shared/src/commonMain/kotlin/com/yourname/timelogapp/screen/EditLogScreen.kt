@@ -1,22 +1,26 @@
 package com.yourname.timelogapp.screen
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.yourname.timelogapp.component.WheelPicker
 import com.yourname.timelogapp.model.TimeLog
 import com.yourname.timelogapp.storage.TimeLogStorage
 import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun EditLogScreen(log: TimeLog, onBack: () -> Unit) {
-    var startHour by remember { mutableStateOf(log.dateTime.hour.toString().padStart(2, '0')) }
-    var startMinute by remember { mutableStateOf(log.dateTime.minute.toString().padStart(2, '0')) }
-    var endHour by remember { mutableStateOf(log.endDateTime?.hour?.toString()?.padStart(2, '0') ?: "") }
-    var endMinute by remember { mutableStateOf(log.endDateTime?.minute?.toString()?.padStart(2, '0') ?: "") }
+    val hours = (0..23).map { it.toString().padStart(2, '0') }
+    val minutes = (0..59).map { it.toString().padStart(2, '0') }
+
+    var startHourIndex by remember { mutableStateOf(log.dateTime.hour) }
+    var startMinuteIndex by remember { mutableStateOf(log.dateTime.minute) }
+    var hasEndTime by remember { mutableStateOf(log.endDateTime != null) }
+    var endHourIndex by remember { mutableStateOf(log.endDateTime?.hour ?: log.dateTime.hour) }
+    var endMinuteIndex by remember { mutableStateOf(log.endDateTime?.minute ?: log.dateTime.minute) }
     var activity by remember { mutableStateOf(log.activity) }
     var errorMessage by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -60,42 +64,64 @@ fun EditLogScreen(log: TimeLog, onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 開始時刻
             Text("開始時刻", style = MaterialTheme.typography.labelLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = startHour,
-                    onValueChange = { if (it.length <= 2) startHour = it },
-                    label = { Text("時") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                WheelPicker(
+                    items = hours,
+                    selectedIndex = startHourIndex,
+                    onSelectedIndexChange = { startHourIndex = it },
                     modifier = Modifier.weight(1f)
                 )
-                OutlinedTextField(
-                    value = startMinute,
-                    onValueChange = { if (it.length <= 2) startMinute = it },
-                    label = { Text("分") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Text("終了時刻（任意）", style = MaterialTheme.typography.labelLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = endHour,
-                    onValueChange = { if (it.length <= 2) endHour = it },
-                    label = { Text("時") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = endMinute,
-                    onValueChange = { if (it.length <= 2) endMinute = it },
-                    label = { Text("分") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                Text(":", style = MaterialTheme.typography.headlineMedium)
+                WheelPicker(
+                    items = minutes,
+                    selectedIndex = startMinuteIndex,
+                    onSelectedIndexChange = { startMinuteIndex = it },
                     modifier = Modifier.weight(1f)
                 )
             }
 
+            // 終了時刻
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("終了時刻", style = MaterialTheme.typography.labelLarge)
+                Switch(
+                    checked = hasEndTime,
+                    onCheckedChange = { hasEndTime = it }
+                )
+            }
+
+            if (hasEndTime) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    WheelPicker(
+                        items = hours,
+                        selectedIndex = endHourIndex,
+                        onSelectedIndexChange = { endHourIndex = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(":", style = MaterialTheme.typography.headlineMedium)
+                    WheelPicker(
+                        items = minutes,
+                        selectedIndex = endMinuteIndex,
+                        onSelectedIndexChange = { endMinuteIndex = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // 活動内容
             OutlinedTextField(
                 value = activity,
                 onValueChange = { activity = it },
@@ -110,24 +136,18 @@ fun EditLogScreen(log: TimeLog, onBack: () -> Unit) {
 
             Button(
                 onClick = {
-                    val sh = startHour.toIntOrNull()
-                    val sm = startMinute.toIntOrNull()
-                    val eh = endHour.toIntOrNull()
-                    val em = endMinute.toIntOrNull()
-                    val endFilled = endHour.isNotBlank() || endMinute.isNotBlank()
-
                     when {
-                        sh == null || sh !in 0..23 -> errorMessage = "開始時（0〜23）を入力してください"
-                        sm == null || sm !in 0..59 -> errorMessage = "開始分（0〜59）を入力してください"
-                        endFilled && (eh == null || eh !in 0..23) -> errorMessage = "終了時（0〜23）を入力してください"
-                        endFilled && (em == null || em !in 0..59) -> errorMessage = "終了分（0〜59）を入力してください"
                         activity.isBlank() -> errorMessage = "活動内容を入力してください"
                         else -> {
                             val startDateTime = LocalDateTime(
-                                log.dateTime.year, log.dateTime.month, log.dateTime.day, sh, sm
+                                log.dateTime.year, log.dateTime.month, log.dateTime.day,
+                                startHourIndex, startMinuteIndex
                             )
-                            val endDateTime = if (endFilled && eh != null && em != null) {
-                                LocalDateTime(log.dateTime.year, log.dateTime.month, log.dateTime.day, eh, em)
+                            val endDateTime = if (hasEndTime) {
+                                LocalDateTime(
+                                    log.dateTime.year, log.dateTime.month, log.dateTime.day,
+                                    endHourIndex, endMinuteIndex
+                                )
                             } else null
                             TimeLogStorage.updateLog(log.id, startDateTime, endDateTime, activity)
                             onBack()
