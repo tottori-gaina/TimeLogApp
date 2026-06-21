@@ -1,0 +1,21 @@
+CREATE TABLE TimeLog (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    start_time TEXT NOT NULL,
+    end_time TEXT,
+    activity TEXT NOT NULL
+);
+
+selectAll:
+SELECT * FROM TimeLog ORDER BY start_time ASC;
+
+selectByDate:
+SELECT * FROM TimeLog WHERE start_time LIKE ? || '%' ORDER BY start_time ASC;
+
+selectDates:
+SELECT DISTINCT substr(start_time, 1, 10) AS date FROM TimeLog ORDER BY date DESC;
+
+insert:
+INSERT INTO TimeLog (id, start_time, end_time, activity) VALUES (NULL, ?, ?, ?);
+
+delete:
+DELETE FROM TimeLog WHERE id = ?;

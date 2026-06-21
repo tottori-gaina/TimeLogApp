@@ -3,42 +3,47 @@ package com.yourname.timelogapp.storage
 import com.yourname.timelogapp.model.TimeLog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 object TimeLogStorage {
-    private val logs = mutableListOf<TimeLog>()
-    private var nextId = 1L
+
+    private val queries = DatabaseHelper.database.timeLogQueries
 
     fun addLog(dateTime: LocalDateTime, endDateTime: LocalDateTime?, activity: String) {
-        logs.add(
-            TimeLog(
-                id = nextId++,
-                dateTime = dateTime,
-                endDateTime = endDateTime,
-                activity = activity
-            )
+        queries.insert(
+            start_time = dateTime.toString(),
+            end_time = endDateTime?.toString(),
+            activity = activity
         )
     }
 
     fun getLogsForToday(): List<TimeLog> {
-        return logs.sortedBy { it.dateTime }
+        val today = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date.toString()
+        return queries.selectByDate(today).executeAsList().map { it.toModel() }
     }
 
     fun deleteLog(id: Long) {
-        logs.removeAll { it.id == id }
+        queries.delete(id)
     }
 
-    // 日付一覧を取得（ログがある日付のみ、新しい順）
     fun getAvailableDates(): List<LocalDate> {
-        return logs
-            .map { it.dateTime.date }
-            .distinct()
-            .sortedDescending()
+        return queries.selectDates().executeAsList().map {
+            LocalDate.parse(it)
+        }
     }
 
-    // 特定の日付のログを取得
     fun getLogsForDate(date: LocalDate): List<TimeLog> {
-        return logs
-            .filter { it.dateTime.date == date }
-            .sortedBy { it.dateTime }
+        return queries.selectByDate(date.toString()).executeAsList().map { it.toModel() }
     }
+
+    private fun com.yourname.timelogapp.db.TimeLog.toModel() = TimeLog(
+        id = id,
+        dateTime = LocalDateTime.parse(start_time),
+        endDateTime = end_time?.let { LocalDateTime.parse(it) },
+        activity = activity
+    )
 }
